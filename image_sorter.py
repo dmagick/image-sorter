@@ -6,51 +6,68 @@ Quick script to sort a lot of images into when they were taken, ala yyyy/mm/dd
 based on exif data (when the pic was taken)
 """
 
-sorted_path=""
-origin_image_path=""
+origin_image_path="y:" + os.sep + "to_sort"
+sorted_path="y:" + os.sep + "Photos"
 
 if sorted_path == "":
-    print "Must set a sorted path (base directory for where the images will be sorted to)"
-    sys.exit(1)
+	print "Must set a sorted path (base directory for where the images will be sorted to)"
+	sys.exit(1)
 
 if origin_image_path == "":
-    print "Must set an origin path (where the images are currently)"
-    sys.exit(1)
+	print "Must set an origin path (where the images are currently)"
+	sys.exit(1)
 
 def mkdir_p(path):
-    try:
-        os.makedirs(path, 0755)
-    except OSError as exc: # Python >2.5
-        if exc.errno == errno.EEXIST:
-            pass
-        else: raise
+	if not os.path.isdir(path):
+		os.makedirs(path, 0755)
 
 # os.path.walk can be used to traverse directories recursively
 # to apply changes to a whole tree of files.
-def callback( arg, dirname, fnames ):
-    for file in fnames:
-        arg.append(dirname + "/" + file)
+def find_images( arg, dirname, fnames ):
+	for file in fnames:
+		arg.append(dirname + os.sep + file)
 
+print "Finding images.."
 arglist = []
-os.path.walk(origin_image_path,callback,arglist)
+os.path.walk(origin_image_path,find_images,arglist)
 
+total_files = len(arglist)
+
+c = 0
 for file in arglist:
-    if os.path.isfile(file):
-        exiv_image = pyexiv2.Image(file)
-        exiv_image.readMetadata()
-        exif_keys = exiv_image.exifKeys()
-        image_date = exiv_image["Exif.Image.DateTime"]
-        y = image_date.year
-        m = image_date.strftime("%m")
-        d = image_date.strftime("%d")
-        final_path=sorted_path + "/" + str(y) + "/" + str(m) + "/" + str(d)
-        mkdir_p(final_path)
-        final_image_path = final_path + "/" + os.path.basename(file)
-        try:
-            os.rename(file, final_image_path)
-        except:
-            print "Unexpected error:", sys.exc_info()[0]
-            raise
+	c = c + 1
+	if c % 10 == 0:
+		print "Processed " + str(c) + "/" + str(total_files) + "\r",
 
-        sys.exit(1)
+	if os.path.isfile(file):
+		extension = os.path.splitext(file)[1].lower()
+		if extension != ".jpg" and extension != ".cr2" and extension != ".crw":
+			continue
 
+		metadata = pyexiv2.ImageMetadata(file)
+		metadata.read()
+		key_to_find = "Exif.Image.DateTime"
+		try:
+			found = metadata[key_to_find]
+		except KeyError:
+			found = False
+		
+		if not found:
+			continue
+
+		tag = metadata[key_to_find].value
+		y = tag.year
+		m = tag.strftime("%m")
+		d = tag.strftime("%d")
+		final_path=sorted_path + os.sep + str(y) + os.sep + str(m) + os.sep + str(d)
+		mkdir_p(final_path)
+		final_image_path = final_path + os.sep + os.path.basename(file)
+		try:
+			os.rename(file, final_image_path)
+		except:
+			print
+			print "trying to put file " + file + " into " + final_image_path
+			print "Unexpected error:", sys.exc_info()[0]
+			continue
+
+print "Processed " + str(c) + "/" + str(total_files)
