@@ -38,10 +38,17 @@ for file in arglist:
 	c = c + 1
 	if c % 10 == 0:
 		print "Processed " + str(c) + "/" + str(total_files) + "\r",
+	
+	if os.path.isdir(file):
+		if not os.listdir(file):
+			os.rmdir(file)
+			continue
+
 
 	if os.path.isfile(file):
 		extension = os.path.splitext(file)[1].lower()
 		if extension != ".jpg" and extension != ".cr2" and extension != ".crw":
+			os.remove(file)
 			continue
 
 		metadata = pyexiv2.ImageMetadata(file)
@@ -56,12 +63,21 @@ for file in arglist:
 			continue
 
 		tag = metadata[key_to_find].value
+		if tag == "0000:00:00 00:00:00":
+			print
+			print "Skipping file " + file
+			continue
+
 		y = tag.year
 		m = tag.strftime("%m")
 		d = tag.strftime("%d")
 		final_path=sorted_path + os.sep + str(y) + os.sep + str(m) + os.sep + str(d)
 		mkdir_p(final_path)
 		final_image_path = final_path + os.sep + os.path.basename(file)
+		if os.path.isfile(final_image_path):
+			os.remove(final_image_path)
+			continue
+
 		try:
 			os.rename(file, final_image_path)
 		except:
