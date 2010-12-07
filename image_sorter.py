@@ -33,12 +33,15 @@ os.path.walk(origin_image_path,find_images,arglist)
 
 total_files = len(arglist)
 
+duplicates = {}
+stats = {}
+
 c = 0
 for file in arglist:
 	c = c + 1
 	if c % 10 == 0:
 		print "Processed " + str(c) + "/" + str(total_files) + "\r",
-	
+
 	if os.path.isdir(file):
 		if not os.listdir(file):
 			os.rmdir(file)
@@ -58,7 +61,7 @@ for file in arglist:
 			found = metadata[key_to_find]
 		except KeyError:
 			found = False
-		
+
 		if not found:
 			continue
 
@@ -71,11 +74,17 @@ for file in arglist:
 		y = tag.year
 		m = tag.strftime("%m")
 		d = tag.strftime("%d")
+		stats_dmy = str(y) + os.sep + str(m) + os.sep + str(d)
+		if stats_dmy in stats:
+			stats[stats_dmy]+=1
+		else:
+			stats[stats_dmy]=1
+
 		final_path=sorted_path + os.sep + str(y) + os.sep + str(m) + os.sep + str(d)
 		mkdir_p(final_path)
 		final_image_path = final_path + os.sep + os.path.basename(file)
 		if os.path.isfile(final_image_path):
-			os.remove(final_image_path)
+			duplicates[file] = final_image_path
 			continue
 
 		try:
@@ -87,3 +96,12 @@ for file in arglist:
 			continue
 
 print "Processed " + str(c) + "/" + str(total_files)
+print "========"
+for k, v in stats.iteritems():
+	print str(v) + " images were put in " + k
+
+for k, v in duplicates.iteritems():
+	print "Found duplicate image: " + k + " (already found at " + v + ")"
+print
+print "========"
+pause = input('press enter to exit.')
