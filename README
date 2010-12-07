@@ -1,0 +1,1 @@
+Python script to sort through a heap of images (based on exif data) dumped into the same location and move them into folders based on yyyy/mm/dd
