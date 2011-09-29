@@ -1,1 +1,2 @@
-Python script to sort through a heap of images (based on exif data) dumped into the same location and move them into folders based on yyyy/mm/dd
+image_sorter.py is a python script to sort through a heap of images (based on exif data) dumped into the same location and move them into folders based on yyyy/mm/dd .
+image_extractor.py is a python script to look at a heap of images and where possible pull out thumbnails from exif data (eg from crw, cr2 files).
