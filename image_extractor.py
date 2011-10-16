@@ -49,6 +49,9 @@ for file in arglist:
 			mkdir_p(newpath)
 		continue
 
+	if os.path.isfile(newpath):
+		continue
+
 	ext  = os.path.splitext(file)[1]
 	lext = ext.lower()
 	if lext != ".jpg" and lext != ".cr2" and lext != ".crw":
@@ -56,14 +59,15 @@ for file in arglist:
 
 	fname = os.path.splitext(newpath)[0]
 
-	if os.path.isfile(fname):
+	try:
+		metadata = pyexiv2.ImageMetadata(file)
+		metadata.read()
+		thumb = metadata.exif_thumbnail
+		thumb.write_to_file(fname)
+	except:
+		print
+		print "trying to extract thumbnail to " + fname + " failed"
 		continue
-
-	metadata = pyexiv2.ImageMetadata(file)
-	metadata.read()
-
-	thumb = metadata.exif_thumbnail
-	thumb.write_to_file(fname)
 
 print "Processed " + str(c) + "/" + str(total_files)
 print "========"
