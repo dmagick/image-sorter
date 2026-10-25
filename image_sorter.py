@@ -7,6 +7,8 @@ import pprint
 """
 Quick script to sort a lot of images into when they were taken, ala yyyy/mm/dd
 based on exif data (when the pic was taken)
+
+uses https://pypi.org/project/PyExifTool/ to look at the metadata of an image or movie file.
 """
 
 keep_duplicate_images = False
